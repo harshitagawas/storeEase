@@ -1,0 +1,66 @@
+/app
+  /auth
+    /login
+    /register
+    /verify
+    /forgot
+    /reset
+  /dashboard
+    /files
+    /files/[id]
+    /upload
+    /folders
+  /share
+    /[qrId]
+  layout.js
+  page.js
+
+/app/api
+  /auth
+    login
+    register
+    verify
+    forgot
+    reset
+  /files
+    upload
+    update
+    delete
+    list
+    details
+  /folders
+    create
+    delete
+    list
+  /qr
+    generate
+    access
+  /ai
+    tag
+    summarize
+    search
+
+/lib
+  prisma.js
+  auth.js
+  email.js
+  storage.js
+  qr.js
+  ai.js
+  helpers.js
+
+/components
+  Navbar.js
+  FileCard.js
+  FolderCard.js
+  UploadButton.js
+  QRModal.js
+  Input.js
+  Button.js
+
+/prisma
+  schema.prisma
+
+/public
+  /qr
+
