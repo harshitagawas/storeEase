@@ -1,26 +1,80 @@
+/* Google Fonts */
+@import url("https://fonts.googleapis.com/css2?family=Mozilla+Headline:wght@200..700&family=Share+Tech&family=Sora:wght@100..800&display=swap");
+
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Light Theme Colors */
+  --background: #f2f4f7; /* professional light gray */
+  --foreground: #1a1a1a; /* elegant dark text */
+  --background-secondary: #ffffff;
+  --foreground-secondary: #4a5568;
+  --border-color: rgba(26, 26, 26, 0.1);
+  --card-background: #ffffff;
+  --card-border: rgba(26, 26, 26, 0.08);
+
+  /* Accent Colors */
+  --brand-brown: rgb(153, 76, 30);
+  --pink-soft: #ffe0e8;
+  --indigo-soft: #e1e3f8;
+  --violet-mist: #e5e0f6;
+  --orange-bright: #fe832f;
+  --purple-deep: #9979df;
+  --blue-sky: #7ca0fe;
+
+  /* Fonts */
+  --font-headline: "Mozilla Headline", sans-serif;
+  --font-tech: "Share Tech", sans-serif;
+  --font-sora: "Sora", sans-serif;
+}
+
+[data-theme="dark"] {
+  /* Dark Theme Colors */
+  --background: #1a1a1a; /* elegant dark background */
+  --foreground: #f2f4f7; /* light text */
+  --background-secondary: #252525;
+  --foreground-secondary: #a0aec0;
+  --border-color: rgba(242, 244, 247, 0.1);
+  --card-background: #252525;
+  --card-border: rgba(242, 244, 247, 0.08);
+
+  /* Accent Colors - adjusted for dark mode */
+  --brand-brown: rgb(180, 100, 50);
+  --pink-soft: #4a1a2a;
+  --indigo-soft: #2a2d4a;
+  --violet-mist: #3a3450;
+  --orange-bright: #ff9d5c;
+  --purple-deep: #b89aff;
+  --blue-sky: #9bb5ff;
 }
 
 @theme inline {
+  /* Core Colors */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-background-secondary: var(--background-secondary);
+  --color-foreground-secondary: var(--foreground-secondary);
+  --color-border: var(--border-color);
+  --color-card-background: var(--card-background);
+  --color-card-border: var(--card-border);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* Accent Colors */
+  --color-brand-brown: var(--brand-brown);
+  --color-pink-soft: var(--pink-soft);
+  --color-indigo-soft: var(--indigo-soft);
+  --color-violet-mist: var(--violet-mist);
+  --color-orange-bright: var(--orange-bright);
+  --color-purple-deep: var(--purple-deep);
+  --color-blue-sky: var(--blue-sky);
+
+  /* Font Tokens */
+  --font-headline: var(--font-headline); /* For big titles */
+  --font-tech: var(--font-tech); /* For futuristic tags/numbers */
+  --font-sans: var(--font-sora); /* Default UI font */
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sora), sans-serif;
 }

@@ -1,3 +1,5 @@
+export const runtime = "nodejs";
+
 import { prisma } from "@/lib/prisma";
 import { uploadToCloudinary } from "@/lib/storage";
 import { NextResponse } from "next/server";

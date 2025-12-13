@@ -1,0 +1,230 @@
+🌿 1. Create the Core Layout (Navigation + Auth Shell)
+
+A frame before the painting.
+
+Files:
+
+app/layout.js
+components/Navbar.jsx
+components/AuthLayout.jsx
+
+
+Core idea:
+
+If user not logged in → show minimal navbar
+
+If user logged in → show dashboard nav
+
+A gentle split, like two worlds.
+
+📜 2. Build the Auth Pages (Login / Register / Verify Email)
+
+These are like gates before access.
+
+Pages:
+
+app/login/page.jsx
+app/register/page.jsx
+app/verify/page.jsx
+
+
+Each page:
+
+Form
+
+Backend call
+
+Toast messages
+
+Smooth navigation
+
+Keep them clean, elegant, unburdened.
+
+📁 3. Build Your Dashboard Base
+
+A quiet room where everything begins.
+
+File:
+
+app/dashboard/page.jsx
+
+
+Things to show initially:
+
+Welcome message
+
+Recent files preview
+
+“Upload File” button
+
+“Generate QR” button
+
+“AI Assistant” button
+
+A soft command center.
+
+📤 4. Build the Upload Page UI
+
+This is the heart.
+Let it feel airy, confident.
+
+File:
+
+app/dashboard/upload/page.jsx
+
+
+Features:
+
+Drag & drop box
+
+File preview
+
+Upload button
+
+Progress shimmer
+
+Once uploaded → show “View in Cloudinary” + “Copy URL”.
+
+📦 5. Display All Files (Your Locker Contents)
+
+Your digital orchard.
+Everything neatly visible.
+
+File:
+
+app/dashboard/files/page.jsx
+
+
+Show each file as a card:
+
+Thumbnail
+
+File name
+
+File type
+
+Created date
+
+Download button
+
+QR button
+
+A calm gallery.
+
+🔐 6. Build the QR Share Page
+
+This is where magic meets geometry.
+
+File:
+
+app/dashboard/qr/page.jsx
+
+
+Features:
+
+Generate QR for any file
+
+Password protect toggle
+
+Copy QR image
+
+Share QR link
+
+“View access logs” (later)
+
+The QR is simply a doorway.
+
+🤖 7. Add the AI Assistant (Hugging Face)
+
+Your whispering oracle.
+
+File:
+
+app/dashboard/ai/page.jsx
+
+
+Capabilities:
+
+Summarize a PDF
+
+Describe an image
+
+Extract key info from a document
+
+Use free HF models:
+
+facebook/bart-large-cnn (summaries)
+
+Salesforce/blip-image-captioning (image description)
+
+bert-base-uncased (text extraction)
+
+Keep this page minimal and delightful.
+
+⚙ 8. Settings Page
+
+A quiet corner for preferences.
+
+File:
+
+app/dashboard/settings/page.jsx
+
+
+Features:
+
+Change email
+
+Change password
+
+Toggle themes
+
+View account info
+
+🧭 9. Routing + Middleware (Protect Dashboard)
+
+Add:
+
+middleware.js
+
+
+Redirect if user not authenticated.
+
+Simple logic:
+
+If token missing → send to /login
+
+If token exists → allow dashboard
+
+A silent guardian.
+
+🌌 10. Polish: Animations & Feedback
+
+Add small touches:
+
+Framer Motion fades
+
+Toast notifications
+
+Loading shimmer
+
+This is the perfume of your interface.
+
+
+🌟 Option A (recommended): Auto-redirect logged-in users from landing → dashboard
+Landing is public, BUT logged-in users instantly skip it.
+
+Feels smooth. Professional. Natural.
+
+Inside app/(public)/page.jsx:
+
+"use client";
+import { useEffect } from "react";
+
+export default function Landing() {
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) window.location.href = "/dashboard";
+  }, []);
+
+  return <YourLandingContent />;
+}
