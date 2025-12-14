@@ -45,7 +45,9 @@ model File {
   url          String
   type         String
   size         Int
+
   createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt   // 👈 ADD THIS
 
   cloudId      String?
   resourceType String?  // image | video | raw
@@ -55,4 +57,6 @@ model File {
 
   folderId     String?
   folder       Folder?  @relation(fields: [folderId], references: [id])
+
+  aiMetadata   Json?    // 👈 ADD THIS (VERY IMPORTANT)
 }

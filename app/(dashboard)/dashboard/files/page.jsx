@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import FilesHeader from "@/components/files/FilesHeader";
 import FolderCard from "@/components/files/FolderCard";
 import FileCard from "@/components/files/FileCard";
+import FilePreviewDrawer from "@/components/files/FilePreviewDrawer";
 import CreateFolderModal from "@/components/upload/CreateFolderModal";
 
 /**
@@ -22,6 +23,8 @@ export default function FilesPage() {
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState("grid");
   const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   // Fetch data when folder changes
   useEffect(() => {
@@ -67,6 +70,24 @@ export default function FilesPage() {
 
   const handleFileDelete = (fileId) => {
     setFiles((prev) => prev.filter((f) => f.id !== fileId));
+    // Close drawer if deleted file was selected
+    if (selectedFile?.id === fileId) {
+      setIsDrawerOpen(false);
+      setSelectedFile(null);
+    }
+  };
+
+  const handleFileClick = (file) => {
+    setSelectedFile(file);
+    setIsDrawerOpen(true);
+  };
+
+  const handleDrawerClose = () => {
+    setIsDrawerOpen(false);
+    // Clear selectedFile after animation completes
+    setTimeout(() => {
+      setSelectedFile(null);
+    }, 300);
   };
 
   const handleBackClick = () => {
@@ -206,6 +227,7 @@ export default function FilesPage() {
                     file={file}
                     viewMode={viewMode}
                     onDelete={handleFileDelete}
+                    onClick={() => handleFileClick(file)}
                   />
                 ))}
               </div>
@@ -220,6 +242,13 @@ export default function FilesPage() {
         onClose={() => setIsCreateFolderOpen(false)}
         onSuccess={handleFolderCreated}
         parentFolderId={folderId}
+      />
+
+      {/* File Preview Drawer */}
+      <FilePreviewDrawer
+        isOpen={isDrawerOpen && selectedFile !== null}
+        onClose={handleDrawerClose}
+        file={selectedFile}
       />
     </div>
   );

@@ -4,7 +4,12 @@
  * FileCard Component
  * Displays a file with download and delete options
  */
-export default function FileCard({ file, viewMode = "grid", onDelete }) {
+export default function FileCard({
+  file,
+  viewMode = "grid",
+  onDelete,
+  onClick,
+}) {
   const formatBytes = (bytes) => {
     if (!bytes) return "0 B";
     if (bytes < 1024) return `${bytes} B`;
@@ -54,13 +59,23 @@ export default function FileCard({ file, viewMode = "grid", onDelete }) {
   if (viewMode === "list") {
     return (
       <div
-        className="flex items-center justify-between p-4 rounded-lg border transition-colors duration-200"
+        className="flex items-center justify-between p-4 rounded-lg border transition-colors duration-200 cursor-pointer"
         style={{
           backgroundColor: "var(--card-background)",
           borderColor: "var(--card-border)",
         }}
+        onClick={onClick}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.backgroundColor = "var(--background-secondary)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = "var(--card-background)";
+        }}
       >
-        <div className="flex items-center gap-3 flex-1 min-w-0">
+        <div
+          className="flex items-center gap-3 flex-1 min-w-0"
+          onClick={(e) => e.stopPropagation()}
+        >
           <div className="text-2xl">{getFileIcon(file.type)}</div>
           <div className="flex-1 min-w-0">
             <h3
@@ -85,7 +100,10 @@ export default function FileCard({ file, viewMode = "grid", onDelete }) {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div
+          className="flex items-center gap-2"
+          onClick={(e) => e.stopPropagation()}
+        >
           <button
             onClick={handleDownload}
             className="px-3 py-1 rounded text-sm font-medium transition-colors duration-200"
@@ -129,10 +147,17 @@ export default function FileCard({ file, viewMode = "grid", onDelete }) {
   // Grid view
   return (
     <div
-      className="p-4 rounded-lg border transition-colors duration-200"
+      className="p-4 rounded-lg border transition-colors duration-200 cursor-pointer"
       style={{
         backgroundColor: "var(--card-background)",
         borderColor: "var(--card-border)",
+      }}
+      onClick={onClick}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.backgroundColor = "var(--background-secondary)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.backgroundColor = "var(--card-background)";
       }}
     >
       <div className="flex flex-col">
@@ -158,7 +183,7 @@ export default function FileCard({ file, viewMode = "grid", onDelete }) {
         >
           {formatBytes(file.size)}
         </p>
-        <div className="flex gap-2">
+        <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={handleDownload}
             className="flex-1 px-2 py-1 rounded text-xs font-medium transition-colors duration-200"

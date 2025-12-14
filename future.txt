@@ -1,3 +1,180 @@
 update recents from dashboard
 drag and drop
 delee folder
+mobile responsivness
+
+
+🔹 UPDATED PROMPT 2 — IMAGE CAPTIONING (AI FEATURE 2)
+
+Applies to: JPG, PNG, JPEG, WEBP
+Model: Salesforce/blip-image-captioning-large
+
+📌 Prompt
+Implement AI Image Captioning for StoreEase.
+
+FEATURE DETAILS:
+- Applies ONLY to image files:
+  JPG, PNG, JPEG, WEBP
+- Does NOT apply to PDFs, videos, or text files
+- Uses Hugging Face model: Salesforce/blip-image-captioning-large
+
+BACKEND FLOW:
+- Use Cloudinary image URL directly
+- Send the image URL as input to Hugging Face Inference API
+- Receive a single descriptive sentence as caption
+- Store result in Prisma File.aiMetadata.caption
+
+API REQUIREMENTS:
+- Create POST API route /api/ai/caption
+- Authenticate user using existing JWT cookie logic
+- Accept fileId in request body
+- Fetch file from DB and verify ownership
+- Ensure file type is image before processing
+- Skip captioning if aiMetadata.caption already exists
+- Return caption in API response
+
+UI REQUIREMENTS:
+- Use the SAME right-side AI preview drawer used for documents
+- When an image file is clicked:
+  - Show image preview
+  - Show caption under heading:
+    "🧠 AI Caption"
+- Drawer must close when clicking outside
+- Smooth fade + slide animation
+
+DESIGN RULES:
+- No OCR
+- No text extraction
+- One sentence only
+- Clean, readable typography
+- No popups or modals
+
+
+✅ Outcome:
+Images get smart, human-readable descriptions without opening them.
+
+🔹 UPDATED PROMPT 3 — KEY INFORMATION EXTRACTION + AI SEARCH (AI FEATURE 3)
+
+Applies to: PDF, TXT, DOCX, receipts, invoices, certificates
+Model: dslim/bert-base-NER
+
+📌 Prompt
+Implement AI Key Information Extraction (NER) with AI-powered search for StoreEase.
+
+FEATURE DETAILS:
+- Applies to document files:
+  PDF, TXT, DOCX, receipts, invoices, certificates
+- Uses Hugging Face model: dslim/bert-base-NER
+- Extract key entities such as:
+  Names, Dates, Amounts, Organizations, Locations
+
+BACKEND FLOW (must follow exactly):
+Cloudinary file URL
+→ Download file
+→ Extract plain text
+→ Send text to NER model
+→ Parse and group entities
+→ Store structured result in Prisma File.aiMetadata.entities
+
+API REQUIREMENTS (NER):
+- Create POST API route /api/ai/entities
+- Authenticate user via JWT cookie
+- Accept fileId
+- Fetch file and verify ownership
+- Skip extraction if aiMetadata.entities already exists
+- Store entities in the following format:
+
+{
+  "entities": {
+    "name": ["Harshita Gawas"],
+    "date": ["12 June 2025"],
+    "amount": ["15000"],
+    "organization": ["XYZ University"]
+  }
+}
+
+UI REQUIREMENTS (NER DISPLAY):
+- Use the SAME right-side AI preview drawer
+- Heading:
+  "🧠 Key Information"
+- Display entities in a clean label-value layout
+- Show section only if entities exist
+- Human-readable values only
+- No raw tokens, no confidence scores
+
+--------------------------------------------------
+AI-POWERED SEARCH (VERY IMPORTANT)
+--------------------------------------------------
+
+SEARCH FEATURE DETAILS:
+- Add a search bar at the top of the Files page
+- Search input should match against:
+  - File name
+  - aiMetadata.entities values (names, dates, amounts, organizations, locations)
+
+BACKEND SEARCH LOGIC:
+- Create a GET API route /api/files/search
+- Authenticate user
+- Accept query string (?q=)
+- Search user's files where:
+  - filename contains query OR
+  - aiMetadata.entities contains query
+- Return matched files only (no AI generation here)
+
+FRONTEND SEARCH BEHAVIOR:
+- Search should work even if filename does NOT match
+- Typing "Harshita", "15000", or "Invoice" should list relevant files
+- Debounce input for performance
+- Show results in existing Files list/grid
+- If search is empty, show normal file list
+
+DESIGN RULES:
+- Clean search bar (no filters UI for now)
+- Instant feedback
+- No page reload
+- Desktop-first, mobile-safe
+
+
+✅ Outcome:
+Documents become structured, searchable, and feel genuinely “smart”.
+
+🔹 UPDATED PROMPT 4 — AI INSIGHTS DRAWER LOGIC (FINAL, STRICT)
+
+This enforces all your rules, including the new search feature compatibility.
+
+📌 Prompt
+Implement AI Insights Drawer logic for StoreEase Files page.
+
+RULES (STRICT):
+1. If file type is IMAGE:
+   - Show ONLY:
+     - Image preview
+     - AI Caption
+2. If file type is NOT image or video:
+   - Show BOTH:
+     - AI Summary
+     - AI Key Information
+3. If file type is VIDEO:
+   - Show no AI features
+   - Only basic file info
+
+UI BEHAVIOR:
+- Single reusable right-side drawer component
+- Drawer opens on file click
+- Drawer closes when clicking outside or pressing Esc
+- Sections render conditionally based on file type
+
+MOBILE BEHAVIOR:
+- Convert drawer to bottom sheet
+- Swipe down or tap outside to close
+
+UX RULES:
+- No tabs
+- No clutter
+- Clear section headings
+- Smooth slide and fade animations
+- Must work seamlessly with AI-powered search results
+
+
+✅ Outcome:
+Exactly the behavior you demanded, now enhanced with smart search.
