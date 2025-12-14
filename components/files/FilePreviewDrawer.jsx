@@ -1,6 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import {
+  Image,
+  Video,
+  FileText,
+  File,
+  FileSpreadsheet,
+  Presentation,
+} from "lucide-react";
 import Drawer from "@/components/common/Drawer";
 
 /**
@@ -112,14 +120,17 @@ export default function FilePreviewDrawer({ isOpen, onClose, file }) {
   };
 
   const getFileIcon = (type) => {
-    if (type?.startsWith("image/")) return "🖼️";
-    if (type?.startsWith("video/")) return "🎥";
-    if (type?.includes("pdf")) return "📄";
-    if (type?.includes("word") || type?.includes("document")) return "📝";
-    if (type?.includes("excel") || type?.includes("spreadsheet")) return "📊";
+    const iconProps = { size: 48 };
+    if (type?.startsWith("image/")) return <Image {...iconProps} />;
+    if (type?.startsWith("video/")) return <Video {...iconProps} />;
+    if (type?.includes("pdf")) return <FileText {...iconProps} />;
+    if (type?.includes("word") || type?.includes("document"))
+      return <FileText {...iconProps} />;
+    if (type?.includes("excel") || type?.includes("spreadsheet"))
+      return <FileSpreadsheet {...iconProps} />;
     if (type?.includes("powerpoint") || type?.includes("presentation"))
-      return "📊";
-    return "📄";
+      return <Presentation {...iconProps} />;
+    return <File {...iconProps} />;
   };
 
   return (
@@ -134,7 +145,9 @@ export default function FilePreviewDrawer({ isOpen, onClose, file }) {
           }}
         >
           <div className="flex items-center gap-4">
-            <div className="text-4xl">{getFileIcon(file.type)}</div>
+            <div style={{ color: "var(--blue-sky)" }}>
+              {getFileIcon(file.type)}
+            </div>
             <div className="flex-1">
               <h3
                 className="text-lg font-semibold mb-1"
@@ -256,6 +269,26 @@ export default function FilePreviewDrawer({ isOpen, onClose, file }) {
 
         {/* File Actions */}
         <div className="flex gap-3">
+          {isDocumentType(file.type) && (
+            <button
+              onClick={() => window.open(file.url, "_blank")}
+              className="flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
+              style={{
+                backgroundColor: "var(--background-secondary)",
+                color: "var(--foreground)",
+                fontFamily: "var(--font-sora)",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "var(--sidenav-hover)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor =
+                  "var(--background-secondary)";
+              }}
+            >
+              View
+            </button>
+          )}
           <button
             onClick={() => window.open(file.url, "_blank")}
             className="flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"

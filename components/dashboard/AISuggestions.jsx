@@ -1,3 +1,5 @@
+import { FileText, Image, Receipt, Zap } from "lucide-react";
+
 /**
  * AISuggestions Component
  * Displays AI-powered insights and suggestions
@@ -24,7 +26,7 @@ export default function AISuggestions({ fileCount, fileTypes }) {
         )} documents suitable for summarization`,
         description: "AI can generate concise summaries for your documents",
         action: "View documents",
-        icon: "📄",
+        icon: FileText,
         priority: "medium",
       });
     }
@@ -37,7 +39,7 @@ export default function AISuggestions({ fileCount, fileTypes }) {
         title: `${Math.min(fileTypes.images, 2)} images missing descriptions`,
         description: "Add AI-generated descriptions to improve searchability",
         action: "Add descriptions",
-        icon: "🖼️",
+        icon: Image,
         priority: "low",
       });
     }
@@ -50,7 +52,7 @@ export default function AISuggestions({ fileCount, fileTypes }) {
         title: "Invoices detected in recent uploads",
         description: "AI can extract key information from invoice documents",
         action: "Extract data",
-        icon: "🧾",
+        icon: Receipt,
         priority: "high",
       });
     }
@@ -63,7 +65,7 @@ export default function AISuggestions({ fileCount, fileTypes }) {
         title: "Storage optimization available",
         description: "AI can identify duplicate or unused files",
         action: "Optimize storage",
-        icon: "⚡",
+        icon: Zap,
         priority: "low",
       });
     }
@@ -154,10 +156,10 @@ export default function AISuggestions({ fileCount, fileTypes }) {
           >
             <div className="flex items-start gap-3">
               <div
-                className="text-xl shrink-0"
+                className="shrink-0"
                 style={{ color: getPriorityColor(insight.priority) }}
               >
-                {insight.icon}
+                <insight.icon size={20} />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">

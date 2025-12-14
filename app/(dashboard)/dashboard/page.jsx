@@ -5,6 +5,7 @@ import FileInsights from "@/components/dashboard/FileInsights";
 import AISuggestions from "@/components/dashboard/AISuggestions";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUserId } from "@/lib/auth-utils";
+import { Folder, HardDrive, BarChart3 } from "lucide-react";
 
 /**
  * Dashboard Page
@@ -154,14 +155,36 @@ export default async function DashboardPage() {
   const { kpis, storage, analytics } = data;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* Page Header */}
+      <div>
+        <h1
+          className="text-3xl font-bold mb-2"
+          style={{
+            color: "var(--foreground)",
+            fontFamily: "var(--font-headline)",
+          }}
+        >
+          Dashboard
+        </h1>
+        <p
+          className="text-sm"
+          style={{
+            color: "var(--foreground-secondary)",
+            fontFamily: "var(--font-sora)",
+          }}
+        >
+          Overview of your files and storage
+        </p>
+      </div>
+
       {/* KPI Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         <StatCard
           title="Total Files"
           value={kpis.totalFiles}
           subtitle="Files stored"
-          icon="📁"
+          icon={<Folder size={24} />}
         />
         <StatCard
           title="Storage Used"
@@ -169,7 +192,7 @@ export default async function DashboardPage() {
           subtitle={`${storage.percentage.toFixed(1)}% of ${
             storage.limitMB
           } MB`}
-          icon="💾"
+          icon={<HardDrive size={24} />}
         />
         <StatCard
           title="File Types"
@@ -182,18 +205,12 @@ export default async function DashboardPage() {
               : "None"
           }
           subtitle="Active categories"
-          icon="📊"
-        />
-        <StatCard
-          title="Last Upload"
-          value={formatDate(kpis.lastUpload)}
-          subtitle="Most recent activity"
-          icon="⬆️"
+          icon={<BarChart3 size={24} />}
         />
       </div>
 
       {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Left Column - Storage & Insights */}
         <div className="lg:col-span-2 space-y-6">
           <StorageUsage
@@ -210,10 +227,6 @@ export default async function DashboardPage() {
         {/* Right Column - Activity & AI */}
         <div className="space-y-6">
           <RecentActivity recentFiles={analytics.recentFiles} />
-          <AISuggestions
-            fileCount={kpis.totalFiles}
-            fileTypes={kpis.fileTypes}
-          />
         </div>
       </div>
     </div>

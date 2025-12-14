@@ -35,7 +35,8 @@ export async function POST(req) {
     const hashed = await hashPassword(password);
     const token = generateToken();
 
-    await prisma.user.create({
+    // Create user first
+    const user = await prisma.user.create({
       data: {
         email,
         password: hashed,
@@ -43,10 +44,18 @@ export async function POST(req) {
       },
     });
 
-    await sendVerificationEmail(email, token);
+    // Send verification email (if this fails, user is still created but can request resend)
+    try {
+      await sendVerificationEmail(email, token);
+    } catch (emailError) {
+      console.error("Failed to send verification email:", emailError);
+      // Don't fail the registration, but log the error
+      // User can request a new verification email later
+    }
 
     return NextResponse.json({
-      message: "Verification email sent",
+      message: "Verification email sent. Please check your inbox.",
+      success: true,
     });
   } catch (err) {
     console.error("Registration error:", err);

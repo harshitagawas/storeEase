@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { Search } from "lucide-react";
 import FilesHeader from "@/components/files/FilesHeader";
 import FolderCard from "@/components/files/FolderCard";
 import FileCard from "@/components/files/FileCard";
@@ -25,13 +26,9 @@ export default function FilesPage() {
   const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  // Fetch data when folder changes
-  useEffect(() => {
-    fetchData();
-  }, [folderId]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       if (folderId) {
@@ -60,7 +57,27 @@ export default function FilesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [folderId]);
+
+  // Fetch data when folder changes
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  // Filter folders and files based on search query
+  const filteredFolders = useMemo(() => {
+    if (!searchQuery.trim()) return folders;
+    const query = searchQuery.toLowerCase();
+    return folders.filter((folder) =>
+      folder.name.toLowerCase().includes(query)
+    );
+  }, [folders, searchQuery]);
+
+  const filteredFiles = useMemo(() => {
+    if (!searchQuery.trim()) return files;
+    const query = searchQuery.toLowerCase();
+    return files.filter((file) => file.name.toLowerCase().includes(query));
+  }, [files, searchQuery]);
 
   const handleFolderCreated = (newFolder) => {
     setIsCreateFolderOpen(false);
@@ -75,6 +92,12 @@ export default function FilesPage() {
       setIsDrawerOpen(false);
       setSelectedFile(null);
     }
+  };
+
+  const handleFolderDelete = (folderId) => {
+    setFolders((prev) => prev.filter((f) => f.id !== folderId));
+    // Refresh data to ensure consistency
+    fetchData();
   };
 
   const handleFileClick = (file) => {
@@ -128,6 +151,36 @@ export default function FilesPage() {
         onViewModeChange={setViewMode}
       />
 
+      {/* Search Bar */}
+      <div
+        className="p-4 rounded-lg border transition-colors duration-300"
+        style={{
+          backgroundColor: "var(--card-background)",
+          borderColor: "var(--card-border)",
+        }}
+      >
+        <div className="relative">
+          <Search
+            size={20}
+            className="absolute left-3 top-1/2 transform -translate-y-1/2"
+            style={{ color: "var(--foreground-secondary)" }}
+          />
+          <input
+            type="text"
+            placeholder="Search files and folders..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 rounded-lg text-sm"
+            style={{
+              backgroundColor: "var(--background-secondary)",
+              color: "var(--foreground)",
+              border: `1px solid var(--border-color)`,
+              fontFamily: "var(--font-sora)",
+            }}
+          />
+        </div>
+      </div>
+
       {/* Back button if not at root */}
       {breadcrumb.length > 0 && (
         <button
@@ -152,7 +205,7 @@ export default function FilesPage() {
       )}
 
       {/* Folders and Files */}
-      {folders.length === 0 && files.length === 0 ? (
+      {folders.length === 0 && files.length === 0 && !searchQuery ? (
         <div
           className="p-12 rounded-lg border text-center"
           style={{
@@ -170,10 +223,28 @@ export default function FilesPage() {
             No folders or files in this location
           </p>
         </div>
+      ) : filteredFolders.length === 0 && filteredFiles.length === 0 ? (
+        <div
+          className="p-12 rounded-lg border text-center"
+          style={{
+            backgroundColor: "var(--card-background)",
+            borderColor: "var(--card-border)",
+          }}
+        >
+          <p
+            className="text-sm"
+            style={{
+              color: "var(--foreground-secondary)",
+              fontFamily: "var(--font-sora)",
+            }}
+          >
+            No results found for "{searchQuery}"
+          </p>
+        </div>
       ) : (
         <>
           {/* Folders */}
-          {folders.length > 0 && (
+          {filteredFolders.length > 0 && (
             <div>
               <h2
                 className="text-lg font-semibold mb-4"
@@ -187,15 +258,16 @@ export default function FilesPage() {
               <div
                 className={
                   viewMode === "grid"
-                    ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
+                    ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
                     : "space-y-2"
                 }
               >
-                {folders.map((folder) => (
+                {filteredFolders.map((folder) => (
                   <FolderCard
                     key={folder.id}
                     folder={folder}
                     viewMode={viewMode}
+                    onDelete={handleFolderDelete}
                   />
                 ))}
               </div>
@@ -203,7 +275,7 @@ export default function FilesPage() {
           )}
 
           {/* Files */}
-          {files.length > 0 && (
+          {filteredFiles.length > 0 && (
             <div>
               <h2
                 className="text-lg font-semibold mb-4"
@@ -217,11 +289,11 @@ export default function FilesPage() {
               <div
                 className={
                   viewMode === "grid"
-                    ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
+                    ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
                     : "space-y-2"
                 }
               >
-                {files.map((file) => (
+                {filteredFiles.map((file) => (
                   <FileCard
                     key={file.id}
                     file={file}

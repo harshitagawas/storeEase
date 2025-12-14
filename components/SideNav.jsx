@@ -2,6 +2,14 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
+import {
+  LayoutDashboard,
+  Folder,
+  Upload,
+  Settings,
+  LogOut,
+  Package,
+} from "lucide-react";
 
 /**
  * Professional Dark Side Navigation Component
@@ -12,8 +20,9 @@ import Link from "next/link";
  * - Smooth hover states
  * - Clean, enterprise design
  * - Logout functionality
+ * - Responsive mobile support
  */
-export default function SideNav() {
+export default function SideNav({ onClose }) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -22,22 +31,17 @@ export default function SideNav() {
     {
       name: "Dashboard",
       href: "/dashboard",
-      icon: "📊",
+      icon: LayoutDashboard,
     },
     {
       name: "Files",
       href: "/dashboard/files",
-      icon: "📁",
+      icon: Folder,
     },
     {
       name: "Upload",
       href: "/dashboard/upload",
-      icon: "⬆️",
-    },
-    {
-      name: "AI Insights",
-      href: "/dashboard/ai",
-      icon: "🤖",
+      icon: Upload,
     },
   ];
 
@@ -59,13 +63,19 @@ export default function SideNav() {
     return pathname.startsWith(href);
   };
 
+  const handleLinkClick = () => {
+    // Close sidebar on mobile when link is clicked
+    if (onClose && window.innerWidth < 1024) {
+      onClose();
+    }
+  };
+
   return (
     <aside
-      className="h-screen flex flex-col rounded-r-2xl"
+      className="h-screen flex flex-col lg:rounded-r-2xl w-[260px]"
       style={{
         backgroundColor: "var(--sidenav-bg)",
         color: "var(--sidenav-text)",
-        width: "260px",
       }}
     >
       {/* Top Section - Branding */}
@@ -75,13 +85,13 @@ export default function SideNav() {
       >
         <div className="flex items-center gap-3">
           <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-lg"
+            className="w-8 h-8 rounded-lg flex items-center justify-center"
             style={{
               backgroundColor: "var(--blue-sky)",
               color: "white",
             }}
           >
-            📦
+            <Package size={20} />
           </div>
           <h1
             className="text-xl font-semibold"
@@ -113,6 +123,7 @@ export default function SideNav() {
               <li key={item.href}>
                 <Link
                   href={item.href}
+                  onClick={handleLinkClick}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 relative ${
                     active ? "font-medium" : ""
                   }`}
@@ -144,7 +155,7 @@ export default function SideNav() {
                       }}
                     />
                   )}
-                  <span className="text-lg">{item.icon}</span>
+                  <item.icon size={20} />
                   <span className="text-sm">{item.name}</span>
                 </Link>
               </li>
@@ -163,6 +174,7 @@ export default function SideNav() {
           <li>
             <Link
               href="/dashboard/settings"
+              onClick={handleLinkClick}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 relative ${
                 isActive("/dashboard/settings") ? "font-medium" : ""
               }`}
@@ -193,7 +205,7 @@ export default function SideNav() {
                   }}
                 />
               )}
-              <span className="text-lg">⚙️</span>
+              <Settings size={20} />
               <span className="text-sm">Settings</span>
             </Link>
           </li>
@@ -215,7 +227,7 @@ export default function SideNav() {
                 e.currentTarget.style.backgroundColor = "transparent";
               }}
             >
-              <span className="text-lg">🚪</span>
+              <LogOut size={20} />
               <span className="text-sm">Logout</span>
             </button>
           </li>

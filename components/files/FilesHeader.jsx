@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { FolderPlus, Upload, Grid3x3, List } from "lucide-react";
 
 /**
  * FilesHeader Component
@@ -57,7 +58,7 @@ export default function FilesHeader({
         <div className="flex items-center gap-3">
           <button
             onClick={onCreateFolder}
-            className="px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
+            className="px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-2"
             style={{
               backgroundColor: "var(--background-secondary)",
               color: "var(--foreground)",
@@ -72,11 +73,12 @@ export default function FilesHeader({
                 "var(--background-secondary)";
             }}
           >
-            📁 New Folder
+            <FolderPlus size={18} />
+            New Folder
           </button>
           <button
             onClick={handleUploadClick}
-            className="px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
+            className="px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-2"
             style={{
               backgroundColor: "var(--blue-sky)",
               color: "white",
@@ -89,7 +91,8 @@ export default function FilesHeader({
               e.currentTarget.style.opacity = "1";
             }}
           >
-            📤 Upload Files
+            <Upload size={18} />
+            Upload Files
           </button>
         </div>
 
@@ -97,7 +100,7 @@ export default function FilesHeader({
         <div className="flex items-center gap-2">
           <button
             onClick={() => onViewModeChange("grid")}
-            className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
+            className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-1 ${
               viewMode === "grid" ? "opacity-100" : "opacity-50"
             }`}
             style={{
@@ -120,11 +123,12 @@ export default function FilesHeader({
               }
             }}
           >
-            ⊞ Grid
+            <Grid3x3 size={16} />
+            Grid
           </button>
           <button
             onClick={() => onViewModeChange("list")}
-            className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
+            className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-1 ${
               viewMode === "list" ? "opacity-100" : "opacity-50"
             }`}
             style={{
@@ -147,12 +151,11 @@ export default function FilesHeader({
               }
             }}
           >
-            ☰ List
+            <List size={16} />
+            List
           </button>
         </div>
       </div>
     </div>
   );
 }
-
-

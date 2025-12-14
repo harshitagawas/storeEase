@@ -1,7 +1,9 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
+import { Sun, Moon } from "lucide-react";
 
 /**
  * Minimal Dashboard Header Component
@@ -17,6 +19,30 @@ import { useTheme } from "next-themes";
 export default function DashboardHeader() {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
+  const [userEmail, setUserEmail] = useState("");
+  const [mounted, setMounted] = useState(false);
+
+  // Prevent hydration mismatch by only rendering theme-dependent content after mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Fetch user email on mount
+  useEffect(() => {
+    const fetchUserEmail = async () => {
+      try {
+        const res = await fetch("/api/user/current");
+        const data = await res.json();
+        if (data.success && data.user) {
+          setUserEmail(data.user.email);
+        }
+      } catch (error) {
+        console.error("Failed to fetch user email:", error);
+      }
+    };
+
+    fetchUserEmail();
+  }, []);
 
   // Map routes to page titles
   const getPageTitle = () => {
@@ -48,8 +74,11 @@ export default function DashboardHeader() {
     setTheme(theme === "dark" ? "light" : "dark");
   };
 
-  // Determine icon based on current theme (default to dark if undefined)
-  const isDark = theme === "dark" || theme === undefined;
+  // Get first letter of email for avatar
+  const getAvatarLetter = () => {
+    if (!userEmail) return "U";
+    return userEmail.charAt(0).toUpperCase();
+  };
 
   return (
     <header
@@ -92,14 +121,16 @@ export default function DashboardHeader() {
               "var(--background-secondary)";
           }}
         >
-          {isDark ? (
-            <span className="text-base">☀️</span>
+          {!mounted ? (
+            <Moon size={18} />
+          ) : theme === "dark" ? (
+            <Sun size={18} />
           ) : (
-            <span className="text-base">🌙</span>
+            <Moon size={18} />
           )}
         </button>
 
-        {/* User Avatar Placeholder */}
+        {/* User Avatar */}
         <div
           className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-medium"
           style={{
@@ -107,8 +138,9 @@ export default function DashboardHeader() {
             color: "var(--sidenav-text)",
             fontFamily: "var(--font-sora)",
           }}
+          title={userEmail || "User"}
         >
-          U
+          {getAvatarLetter()}
         </div>
       </div>
     </header>

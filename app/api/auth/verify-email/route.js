@@ -8,7 +8,14 @@ export async function GET(req) {
     const token = req.nextUrl.searchParams.get("token");
 
     if (!token) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 400 });
+      // Get base URL from request if APP_URL is not set
+      const baseUrl =
+        process.env.APP_URL ||
+        process.env.NEXT_PUBLIC_APP_URL ||
+        `${req.nextUrl.protocol}//${req.nextUrl.host}`;
+      return NextResponse.redirect(
+        `${baseUrl}/login?verified=false&error=invalid_token`
+      );
     }
 
     const user = await prisma.user.findFirst({
@@ -16,11 +23,23 @@ export async function GET(req) {
     });
 
     if (!user) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 400 });
+      const baseUrl =
+        process.env.APP_URL ||
+        process.env.NEXT_PUBLIC_APP_URL ||
+        `${req.nextUrl.protocol}//${req.nextUrl.host}`;
+      return NextResponse.redirect(
+        `${baseUrl}/login?verified=false&error=invalid_token`
+      );
     }
 
     if (user.isVerified) {
-      return NextResponse.json({ message: "Email already verified" });
+      const baseUrl =
+        process.env.APP_URL ||
+        process.env.NEXT_PUBLIC_APP_URL ||
+        `${req.nextUrl.protocol}//${req.nextUrl.host}`;
+      return NextResponse.redirect(
+        `${baseUrl}/login?verified=true&message=already_verified`
+      );
     }
 
     await prisma.user.update({
@@ -31,9 +50,19 @@ export async function GET(req) {
       },
     });
 
-    return NextResponse.redirect(`${process.env.APP_URL}/login?verified=true`);
+    const baseUrl =
+      process.env.APP_URL ||
+      process.env.NEXT_PUBLIC_APP_URL ||
+      `${req.nextUrl.protocol}//${req.nextUrl.host}`;
+    return NextResponse.redirect(`${baseUrl}/login?verified=true`);
   } catch (err) {
     console.error("Verify email error:", err);
-    return NextResponse.redirect(`${process.env.APP_URL}/login?verified=false`);
+    const baseUrl =
+      process.env.APP_URL ||
+      process.env.NEXT_PUBLIC_APP_URL ||
+      `${req.nextUrl.protocol}//${req.nextUrl.host}`;
+    return NextResponse.redirect(
+      `${baseUrl}/login?verified=false&error=server_error`
+    );
   }
 }

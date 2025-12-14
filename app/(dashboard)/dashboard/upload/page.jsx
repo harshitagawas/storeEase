@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
+import { Upload, FolderPlus } from "lucide-react";
 import FolderContextSelector from "@/components/upload/FolderContextSelector";
 import CreateFolderModal from "@/components/upload/CreateFolderModal";
 import UploadQueue from "@/components/upload/UploadQueue";
+import { useDialog } from "@/components/ui/Dialog";
 
 /**
  * Upload Page
@@ -13,12 +15,15 @@ import UploadQueue from "@/components/upload/UploadQueue";
  */
 export default function UploadPage() {
   const searchParams = useSearchParams();
+  const { showDialog } = useDialog();
   const [selectedFolderId, setSelectedFolderId] = useState(null);
   const [breadcrumb, setBreadcrumb] = useState([]);
   const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
   const [uploads, setUploads] = useState([]);
   const [isValidatingFolder, setIsValidatingFolder] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
+  const dropZoneRef = useRef(null);
 
   // Read folder from URL query parameter on mount
   useEffect(() => {
@@ -86,25 +91,101 @@ export default function UploadPage() {
     setIsCreateFolderOpen(false);
   };
 
+  // Validate and process files
+  const processFiles = useCallback(
+    (files) => {
+      if (!files || files.length === 0) {
+        showDialog({
+          type: "error",
+          title: "No Files Selected",
+          message: "Please select at least one file to upload.",
+        });
+        return;
+      }
+
+      const fileArray = Array.from(files);
+      const validFiles = [];
+      const invalidFiles = [];
+
+      // Validate each file
+      fileArray.forEach((file) => {
+        // Check file size (100MB limit)
+        const MAX_FILE_SIZE = 100 * 1024 * 1024;
+        if (file.size > MAX_FILE_SIZE) {
+          invalidFiles.push({
+            name: file.name,
+            reason: `File size exceeds 100MB limit`,
+          });
+          return;
+        }
+
+        // Check file type
+        const allowedTypes = [
+          /^image\//,
+          /^video\//,
+          /^application\/pdf$/,
+          /^application\/(msword|vnd\.openxmlformats-officedocument\.wordprocessingml\.document)$/,
+          /^application\/(vnd\.ms-excel|vnd\.openxmlformats-officedocument\.spreadsheetml\.sheet)$/,
+          /^application\/(vnd\.ms-powerpoint|vnd\.openxmlformats-officedocument\.presentationml\.presentation)$/,
+          /^text\//,
+        ];
+
+        const isAllowedType = allowedTypes.some((pattern) =>
+          pattern.test(file.type)
+        );
+
+        if (!isAllowedType) {
+          invalidFiles.push({
+            name: file.name,
+            reason:
+              "File type not supported. Only images, videos, PDFs, and documents are allowed.",
+          });
+          return;
+        }
+
+        validFiles.push(file);
+      });
+
+      // Show error for invalid files
+      if (invalidFiles.length > 0) {
+        const errorMessage =
+          invalidFiles.length === 1
+            ? `${invalidFiles[0].name}: ${invalidFiles[0].reason}`
+            : `${invalidFiles.length} file(s) were rejected:\n${invalidFiles
+                .map((f) => `• ${f.name}: ${f.reason}`)
+                .join("\n")}`;
+
+        showDialog({
+          type: "error",
+          title: "Invalid Files",
+          message: errorMessage,
+        });
+      }
+
+      // Process valid files
+      if (validFiles.length > 0) {
+        const newUploads = validFiles.map((file, index) => ({
+          id: `upload-${Date.now()}-${index}`,
+          name: file.name,
+          size: file.size,
+          status: "pending",
+          file: file,
+        }));
+
+        setUploads((prev) => [...prev, ...newUploads]);
+
+        // Start uploading each file
+        newUploads.forEach((upload) => {
+          uploadFile(upload);
+        });
+      }
+    },
+    [showDialog]
+  );
+
   const handleFileSelect = (e) => {
-    const files = Array.from(e.target.files || []);
-    if (files.length === 0) return;
-
-    // Initialize upload queue
-    const newUploads = files.map((file, index) => ({
-      id: `upload-${Date.now()}-${index}`,
-      name: file.name,
-      size: file.size,
-      status: "pending",
-      file: file,
-    }));
-
-    setUploads((prev) => [...prev, ...newUploads]);
-
-    // Start uploading each file
-    newUploads.forEach((upload) => {
-      uploadFile(upload);
-    });
+    const files = e.target.files;
+    processFiles(files);
 
     // Reset file input
     if (fileInputRef.current) {
@@ -164,6 +245,36 @@ export default function UploadPage() {
     }
   };
 
+  // Drag and drop handlers
+  const handleDragEnter = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Only set dragging to false if we're leaving the drop zone entirely
+    if (!e.currentTarget.contains(e.relatedTarget)) {
+      setIsDragging(false);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = e.dataTransfer.files;
+    processFiles(files);
+  };
+
   const handleUploadClick = () => {
     fileInputRef.current?.click();
   };
@@ -216,60 +327,108 @@ export default function UploadPage() {
         breadcrumb={breadcrumb}
       />
 
-      {/* Actions Section */}
+      {/* Drag and Drop Zone */}
       <div
-        className="p-6 rounded-lg border transition-colors duration-300"
+        ref={dropZoneRef}
+        onDragEnter={handleDragEnter}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        onTouchStart={(e) => {
+          // Touch-friendly: allow touch events to trigger file selection
+          e.preventDefault();
+        }}
+        className={`p-6 sm:p-12 rounded-lg border-2 border-dashed transition-all duration-300 ${
+          isDragging ? "scale-[1.02]" : ""
+        }`}
         style={{
-          backgroundColor: "var(--card-background)",
-          borderColor: "var(--card-border)",
+          backgroundColor: isDragging
+            ? "var(--background-secondary)"
+            : "var(--card-background)",
+          borderColor: isDragging ? "var(--blue-sky)" : "var(--card-border)",
         }}
       >
-        <h2
-          className="text-lg font-semibold mb-4"
-          style={{
-            color: "var(--foreground)",
-            fontFamily: "var(--font-sora)",
-          }}
-        >
-          Actions
-        </h2>
-        <div className="flex gap-4">
-          <button
-            onClick={handleCreateFolder}
-            className="px-6 py-3 rounded-lg text-sm font-medium transition-colors duration-200"
+        <div className="flex flex-col items-center justify-center text-center space-y-4">
+          <div
+            className="p-4 rounded-full"
             style={{
-              backgroundColor: "var(--background-secondary)",
-              color: "var(--foreground)",
-              border: `1px solid var(--border-color)`,
-              fontFamily: "var(--font-sora)",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "var(--sidenav-hover)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor =
-                "var(--background-secondary)";
+              backgroundColor: isDragging
+                ? "rgba(59, 130, 246, 0.1)"
+                : "var(--background-secondary)",
             }}
           >
-            📁 Create New Folder
-          </button>
-          <button
-            onClick={handleUploadClick}
-            className="px-6 py-3 rounded-lg text-sm font-medium transition-colors duration-200"
-            style={{
-              backgroundColor: "var(--blue-sky)",
-              color: "white",
-              fontFamily: "var(--font-sora)",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.opacity = "0.9";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.opacity = "1";
-            }}
-          >
-            📤 Upload Files
-          </button>
+            <Upload
+              size={48}
+              style={{
+                color: isDragging
+                  ? "var(--blue-sky)"
+                  : "var(--foreground-secondary)",
+              }}
+            />
+          </div>
+          <div>
+            <h3
+              className="text-lg font-semibold mb-2"
+              style={{
+                color: "var(--foreground)",
+                fontFamily: "var(--font-sora)",
+              }}
+            >
+              {isDragging
+                ? "Drop files here to upload"
+                : "Drag and drop files here"}
+            </h3>
+            <p
+              className="text-sm mb-4"
+              style={{
+                color: "var(--foreground-secondary)",
+                fontFamily: "var(--font-sora)",
+              }}
+            >
+              or click the button below to select files
+            </p>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 w-full sm:w-auto">
+              <button
+                onClick={handleCreateFolder}
+                className="px-4 sm:px-6 py-3 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center justify-center gap-2"
+                style={{
+                  backgroundColor: "var(--background-secondary)",
+                  color: "var(--foreground)",
+                  border: `1px solid var(--border-color)`,
+                  fontFamily: "var(--font-sora)",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor =
+                    "var(--sidenav-hover)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor =
+                    "var(--background-secondary)";
+                }}
+              >
+                <FolderPlus size={18} />
+                Create New Folder
+              </button>
+              <button
+                onClick={handleUploadClick}
+                className="px-4 sm:px-6 py-3 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center justify-center gap-2"
+                style={{
+                  backgroundColor: "var(--blue-sky)",
+                  color: "white",
+                  fontFamily: "var(--font-sora)",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.opacity = "0.9";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.opacity = "1";
+                }}
+              >
+                <Upload size={18} />
+                Select Files
+              </button>
+            </div>
+          </div>
         </div>
         <input
           ref={fileInputRef}

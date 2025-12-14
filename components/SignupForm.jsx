@@ -12,6 +12,8 @@ export default function SignupForm() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSignup = async () => {
     if (password !== confirmPassword) {
@@ -24,23 +26,38 @@ export default function SignupForm() {
       return;
     }
 
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters");
+      return;
+    }
+
+    setIsLoading(true);
+    setError("");
+
     try {
       const res = await axios.post("/api/auth/register", {
         email,
         password,
       });
-      // Show success message and redirect to login or show verification message
-      setError(""); // Clear any previous errors
-      alert(
-        "Verification email sent! Please check your email to verify your account."
+
+      // Show success message
+      setSuccess(
+        "Verification email sent! Please check your inbox and click the verification link to activate your account."
       );
-      router.push("/login");
+      setError("");
+
+      // Redirect to login after 3 seconds
+      setTimeout(() => {
+        router.push("/login");
+      }, 3000);
     } catch (err) {
-      setError(
+      const errorMessage =
         err.response?.data?.error ||
-          err.response?.data?.message ||
-          "Signup failed. Please try again."
-      );
+        err.response?.data?.message ||
+        "Signup failed. Please try again.";
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -55,6 +72,17 @@ export default function SignupForm() {
           }}
         >
           {error}
+        </p>
+      )}
+      {success && (
+        <p
+          className="text-sm mb-3 text-center transition-colors duration-200"
+          style={{
+            color: "#10b981",
+            fontFamily: "var(--font-sora)",
+          }}
+        >
+          {success}
         </p>
       )}
       <AuthInput label="Email" type="email" value={email} onChange={setEmail} />
@@ -72,20 +100,23 @@ export default function SignupForm() {
       />
       <button
         onClick={handleSignup}
-        className="w-full py-2 mt-2 rounded-lg font-medium text-white transition-all duration-200 hover:scale-[1.02] hover:shadow-lg"
+        disabled={isLoading}
+        className="w-full py-2 mt-2 rounded-lg font-medium text-white transition-all duration-200 hover:scale-[1.02] hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
         style={{
           backgroundColor: "var(--blue-sky)",
           fontFamily: "var(--font-sora)",
           boxShadow: `0 4px 14px 0 rgba(124, 160, 254, 0.3)`,
         }}
         onMouseEnter={(e) => {
-          e.target.style.boxShadow = `0 4px 20px rgba(124, 160, 254, 0.4)`;
+          if (!isLoading) {
+            e.target.style.boxShadow = `0 4px 20px rgba(124, 160, 254, 0.4)`;
+          }
         }}
         onMouseLeave={(e) => {
           e.target.style.boxShadow = `0 4px 14px 0 rgba(124, 160, 254, 0.3)`;
         }}
       >
-        Sign Up
+        {isLoading ? "Creating Account..." : "Sign Up"}
       </button>
       <p
         className="text-sm mt-4 text-center"

@@ -1,5 +1,17 @@
 "use client";
 
+import {
+  Image,
+  Video,
+  FileText,
+  File,
+  FileSpreadsheet,
+  Presentation,
+  Download,
+  Trash2,
+} from "lucide-react";
+import { useDialog } from "@/components/ui/Dialog";
+
 /**
  * FileCard Component
  * Displays a file with download and delete options
@@ -10,6 +22,8 @@ export default function FileCard({
   onDelete,
   onClick,
 }) {
+  const { showDialog } = useDialog();
+
   const formatBytes = (bytes) => {
     if (!bytes) return "0 B";
     if (bytes < 1024) return `${bytes} B`;
@@ -18,14 +32,17 @@ export default function FileCard({
   };
 
   const getFileIcon = (type) => {
-    if (type?.startsWith("image/")) return "🖼️";
-    if (type?.startsWith("video/")) return "🎥";
-    if (type?.includes("pdf")) return "📄";
-    if (type?.includes("word") || type?.includes("document")) return "📝";
-    if (type?.includes("excel") || type?.includes("spreadsheet")) return "📊";
+    const iconProps = { size: viewMode === "grid" ? 40 : 24 };
+    if (type?.startsWith("image/")) return <Image {...iconProps} />;
+    if (type?.startsWith("video/")) return <Video {...iconProps} />;
+    if (type?.includes("pdf")) return <FileText {...iconProps} />;
+    if (type?.includes("word") || type?.includes("document"))
+      return <FileText {...iconProps} />;
+    if (type?.includes("excel") || type?.includes("spreadsheet"))
+      return <FileSpreadsheet {...iconProps} />;
     if (type?.includes("powerpoint") || type?.includes("presentation"))
-      return "📊";
-    return "📄";
+      return <Presentation {...iconProps} />;
+    return <File {...iconProps} />;
   };
 
   const handleDownload = () => {
@@ -33,27 +50,40 @@ export default function FileCard({
   };
 
   const handleDelete = async () => {
-    if (!confirm(`Are you sure you want to delete "${file.name}"?`)) {
-      return;
-    }
+    showDialog({
+      type: "confirm",
+      title: "Delete File",
+      message: `Are you sure you want to delete "${file.name}"? This action cannot be undone.`,
+      confirmText: "Delete",
+      cancelText: "Cancel",
+      onConfirm: async () => {
+        try {
+          const res = await fetch(`/api/files/delete?id=${file.id}`, {
+            method: "DELETE",
+          });
 
-    try {
-      const res = await fetch(`/api/files/delete?id=${file.id}`, {
-        method: "DELETE",
-      });
+          const data = await res.json();
 
-      const data = await res.json();
+          if (!res.ok) {
+            showDialog({
+              type: "error",
+              title: "Delete Failed",
+              message: data.error || "Failed to delete file",
+            });
+            return;
+          }
 
-      if (!res.ok) {
-        alert(data.error || "Failed to delete file");
-        return;
-      }
-
-      onDelete?.(file.id);
-    } catch (error) {
-      console.error("Delete error:", error);
-      alert("Failed to delete file");
-    }
+          onDelete?.(file.id);
+        } catch (error) {
+          console.error("Delete error:", error);
+          showDialog({
+            type: "error",
+            title: "Delete Failed",
+            message: "Failed to delete file. Please try again.",
+          });
+        }
+      },
+    });
   };
 
   if (viewMode === "list") {
@@ -76,7 +106,9 @@ export default function FileCard({
           className="flex items-center gap-3 flex-1 min-w-0"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="text-2xl">{getFileIcon(file.type)}</div>
+          <div style={{ color: "var(--blue-sky)" }}>
+            {getFileIcon(file.type)}
+          </div>
           <div className="flex-1 min-w-0">
             <h3
               className="text-base font-semibold truncate"
@@ -106,7 +138,7 @@ export default function FileCard({
         >
           <button
             onClick={handleDownload}
-            className="px-3 py-1 rounded text-sm font-medium transition-colors duration-200"
+            className="px-3 py-1 rounded text-sm font-medium transition-colors duration-200 flex items-center gap-1"
             style={{
               backgroundColor: "var(--background-secondary)",
               color: "var(--foreground)",
@@ -120,11 +152,12 @@ export default function FileCard({
                 "var(--background-secondary)";
             }}
           >
+            <Download size={14} />
             Download
           </button>
           <button
             onClick={handleDelete}
-            className="px-3 py-1 rounded text-sm font-medium transition-colors duration-200"
+            className="px-3 py-1 rounded text-sm font-medium transition-colors duration-200 flex items-center gap-1"
             style={{
               backgroundColor: "var(--orange-bright)",
               color: "white",
@@ -137,6 +170,7 @@ export default function FileCard({
               e.currentTarget.style.opacity = "1";
             }}
           >
+            <Trash2 size={14} />
             Delete
           </button>
         </div>
@@ -161,8 +195,11 @@ export default function FileCard({
       }}
     >
       <div className="flex flex-col">
-        <div className="flex items-center justify-center mb-3">
-          <div className="text-4xl">{getFileIcon(file.type)}</div>
+        <div
+          className="flex items-center justify-center mb-3"
+          style={{ color: "var(--blue-sky)" }}
+        >
+          {getFileIcon(file.type)}
         </div>
         <h3
           className="text-sm font-semibold truncate text-center mb-2"
@@ -186,7 +223,7 @@ export default function FileCard({
         <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={handleDownload}
-            className="flex-1 px-2 py-1 rounded text-xs font-medium transition-colors duration-200"
+            className="flex-1 px-2 py-1 rounded text-xs font-medium transition-colors duration-200 flex items-center justify-center gap-1"
             style={{
               backgroundColor: "var(--background-secondary)",
               color: "var(--foreground)",
@@ -200,11 +237,12 @@ export default function FileCard({
                 "var(--background-secondary)";
             }}
           >
+            <Download size={12} />
             Download
           </button>
           <button
             onClick={handleDelete}
-            className="flex-1 px-2 py-1 rounded text-xs font-medium transition-colors duration-200"
+            className="flex-1 px-2 py-1 rounded text-xs font-medium transition-colors duration-200 flex items-center justify-center gap-1"
             style={{
               backgroundColor: "var(--orange-bright)",
               color: "white",
@@ -217,6 +255,7 @@ export default function FileCard({
               e.currentTarget.style.opacity = "1";
             }}
           >
+            <Trash2 size={12} />
             Delete
           </button>
         </div>

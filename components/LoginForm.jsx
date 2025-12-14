@@ -17,15 +17,36 @@ export default function LoginForm() {
   const hasProcessedReset = useRef(false);
 
   useEffect(() => {
-    // Only process reset success message once
+    // Handle password reset success
     if (!hasProcessedReset.current && searchParams.get("reset") === "success") {
       hasProcessedReset.current = true;
-      // Use setTimeout to defer state update and avoid cascading renders
       setTimeout(() => {
         setSuccess(
           "Password reset successful! You can now login with your new password."
         );
       }, 0);
+    }
+
+    // Handle email verification messages
+    const verified = searchParams.get("verified");
+    if (verified === "true") {
+      const message = searchParams.get("message");
+      if (message === "already_verified") {
+        setSuccess("Your email is already verified. You can now login.");
+      } else {
+        setSuccess("Email verified successfully! You can now login.");
+      }
+    } else if (verified === "false") {
+      const errorType = searchParams.get("error");
+      if (errorType === "invalid_token") {
+        setError(
+          "Invalid or expired verification link. Please request a new one."
+        );
+      } else if (errorType === "server_error") {
+        setError("Verification failed. Please try again or contact support.");
+      } else {
+        setError("Email verification failed. Please try again.");
+      }
     }
   }, [searchParams]);
 

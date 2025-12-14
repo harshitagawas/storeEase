@@ -1,5 +1,8 @@
 "use client";
 
+import Image from "next/image";
+import Link from "next/link";
+
 export default function Hero() {
   return (
     <section className="relative overflow-hidden h-screen flex items-center">
@@ -48,51 +51,34 @@ export default function Hero() {
           </p>
 
           <div className="flex items-center gap-4 flex-wrap">
-            <button
-              className="px-6 py-3 rounded-full text-sm font-semibold transition-all duration-200 hover:scale-105 hover:shadow-xl"
-              style={{
-                backgroundColor: "var(--blue-sky)",
-                color: "white",
-                boxShadow: `0 4px 20px rgba(124, 160, 254, 0.4)`,
-              }}
-            >
-              Try for free
-            </button>
-
-            <button
-              className="px-6 py-3 rounded-full text-sm font-semibold transition-all duration-200 hover:scale-105"
-              style={{
-                backgroundColor: "var(--background-secondary)",
-                color: "var(--foreground)",
-                border: `2px solid var(--border-color)`,
-              }}
-            >
-              Demo videos
-            </button>
+            <Link href="/signup">
+              <button
+                className="px-6 py-3 rounded-full text-sm font-semibold transition-all duration-200 hover:scale-105 hover:shadow-xl"
+                style={{
+                  backgroundColor: "var(--blue-sky)",
+                  color: "white",
+                  boxShadow: `0 4px 20px rgba(124, 160, 254, 0.4)`,
+                }}
+              >
+                Get Started
+              </button>
+            </Link>
           </div>
         </div>
 
         {/* RIGHT IMAGE BLOCK */}
         <div className="flex justify-center md:justify-end">
-          <div
-            className="w-full max-w-[400px] h-[350px] rounded-2xl border flex items-center justify-center transition-all duration-300 hover:scale-105 hover:shadow-2xl"
-            style={{
-              backgroundColor: "var(--card-background)",
-              borderColor: "var(--card-border)",
-              boxShadow: `0 20px 60px rgba(0, 0, 0, 0.1)`,
-            }}
-          >
+          <div className="w-full">
             <div
               className="text-center space-y-4"
               style={{ color: "var(--foreground-secondary)" }}
             >
-              <div
-                className="text-6xl mb-4"
-                style={{ color: "var(--purple-deep)" }}
-              >
-                📁
-              </div>
-              <p className="text-sm font-medium">Image goes here</p>
+              <Image
+                src="/collecting.svg"
+                alt="Hero Image"
+                width={700}
+                height={700}
+              />
             </div>
           </div>
         </div>

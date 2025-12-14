@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Folder } from "lucide-react";
 
 /**
  * FolderContextSelector Component
@@ -141,13 +142,18 @@ export default function FolderContextSelector({
                   }
                 }}
               >
-                📁 Root
+                <Folder
+                  size={16}
+                  className="inline mr-2"
+                  style={{ color: "var(--blue-sky)" }}
+                />
+                Root
               </button>
               {folders.map((folder) => (
                 <button
                   key={folder.id}
                   onClick={() => handleFolderSelect(folder.id)}
-                  className="w-full text-left px-3 py-2 rounded-lg text-sm transition-colors duration-200"
+                  className="w-full text-left px-3 py-2 rounded-lg text-sm transition-colors duration-200 flex items-center gap-2"
                   style={{
                     backgroundColor:
                       selectedFolderId === folder.id
@@ -169,7 +175,8 @@ export default function FolderContextSelector({
                     }
                   }}
                 >
-                  📁 {folder.name}
+                  <Folder size={16} style={{ color: "var(--blue-sky)" }} />
+                  {folder.name}
                 </button>
               ))}
               {folders.length === 0 && (

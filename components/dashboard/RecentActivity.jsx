@@ -1,3 +1,5 @@
+import { Upload, QrCode, Sparkles } from "lucide-react";
+
 /**
  * RecentActivity Component
  * Displays a timeline-style feed of recent activities
@@ -12,7 +14,7 @@ export default function RecentActivity({ recentFiles }) {
       message: "File uploaded",
       file: recentFiles?.[0]?.name || "document.pdf",
       timestamp: recentFiles?.[0]?.createdAt || new Date(),
-      icon: "⬆️",
+      icon: Upload,
     },
     {
       id: "2",
@@ -20,7 +22,7 @@ export default function RecentActivity({ recentFiles }) {
       message: "QR code generated",
       file: recentFiles?.[1]?.name || "image.jpg",
       timestamp: recentFiles?.[1]?.createdAt || new Date(Date.now() - 3600000),
-      icon: "📱",
+      icon: QrCode,
     },
     {
       id: "3",
@@ -28,7 +30,7 @@ export default function RecentActivity({ recentFiles }) {
       message: "AI summary requested",
       file: recentFiles?.[2]?.name || "report.pdf",
       timestamp: recentFiles?.[2]?.createdAt || new Date(Date.now() - 7200000),
-      icon: "🤖",
+      icon: Sparkles,
     },
   ];
 
@@ -41,7 +43,7 @@ export default function RecentActivity({ recentFiles }) {
           message: "File uploaded",
           file: file.name,
           timestamp: file.createdAt,
-          icon: "⬆️",
+          icon: Upload,
         }))
       : mockActivities;
 
@@ -113,13 +115,13 @@ export default function RecentActivity({ recentFiles }) {
         {activities.map((activity, index) => (
           <div key={activity.id || index} className="flex items-start gap-3">
             <div
-              className="w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0"
+              className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
               style={{
                 backgroundColor: "var(--sidenav-active)",
                 color: "var(--sidenav-text)",
               }}
             >
-              {activity.icon}
+              <activity.icon size={16} />
             </div>
             <div className="flex-1 min-w-0">
               <p

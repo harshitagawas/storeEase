@@ -1,9 +1,17 @@
 "use client";
+import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
+import { Sun, Moon } from "lucide-react";
 
 export default function Navbar() {
   const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  // Prevent hydration mismatch by only rendering theme-dependent content after mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <nav
@@ -29,14 +37,29 @@ export default function Navbar() {
           {/* Theme Toggle */}
           <button
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105"
+            className="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105 flex items-center gap-2"
             style={{
               backgroundColor: "var(--background-secondary)",
               color: "var(--foreground)",
               border: `1px solid var(--border-color)`,
             }}
           >
-            {theme === "dark" ? "☀️ Light" : "🌙 Dark"}
+            {!mounted ? (
+              <>
+                <Moon size={16} />
+                Dark
+              </>
+            ) : theme === "dark" ? (
+              <>
+                <Sun size={16} />
+                Light
+              </>
+            ) : (
+              <>
+                <Moon size={16} />
+                Dark
+              </>
+            )}
           </button>
 
           {/* Auth Buttons */}
