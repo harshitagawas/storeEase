@@ -22,6 +22,13 @@
   --purple-deep: #9979df;
   --blue-sky: #7ca0fe;
 
+  /* SideNav Colors (always dark, independent of theme) */
+  --sidenav-bg: #0f1419; /* charcoal / deep slate */
+  --sidenav-text: #e2e8f0; /* light text for dark background */
+  --sidenav-hover: rgba(255, 255, 255, 0.08); /* subtle hover */
+  --sidenav-active: rgba(124, 160, 254, 0.15); /* active state with blue tint */
+  --sidenav-border: rgba(255, 255, 255, 0.1); /* subtle border */
+
   /* Fonts */
   --font-headline: "Mozilla Headline", sans-serif;
   --font-tech: "Share Tech", sans-serif;
@@ -46,6 +53,13 @@
   --orange-bright: #ff9d5c;
   --purple-deep: #b89aff;
   --blue-sky: #9bb5ff;
+
+  /* SideNav Colors (always dark, same in both themes) */
+  --sidenav-bg: #0f1419; /* charcoal / deep slate */
+  --sidenav-text: #e2e8f0; /* light text for dark background */
+  --sidenav-hover: rgba(255, 255, 255, 0.08); /* subtle hover */
+  --sidenav-active: rgba(124, 160, 254, 0.15); /* active state with blue tint */
+  --sidenav-border: rgba(255, 255, 255, 0.1); /* subtle border */
 }
 
 @theme inline {

@@ -12,11 +12,31 @@ model User {
   email      String   @unique
   password   String
   isVerified Boolean  @default(false)
-  verificationToken     String?
-  resetPasswordToken    String?
-  resetPasswordExpiry   DateTime?
-  createdAt  DateTime @default(now())
-  files      File[]
+
+  verificationToken   String?
+  resetPasswordToken  String?
+  resetPasswordExpiry DateTime?
+
+  createdAt DateTime @default(now())
+
+  files   File[]
+  folders Folder[]
+}
+
+model Folder {
+  id        String   @id @default(uuid())
+  name      String
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  parentId  String?
+  parent    Folder?  @relation("FolderTree", fields: [parentId], references: [id])
+  children  Folder[] @relation("FolderTree")
+
+  createdAt DateTime @default(now())
+
+  files     File[]
 }
 
 model File {
@@ -29,4 +49,7 @@ model File {
 
   ownerId   String
   owner     User     @relation(fields: [ownerId], references: [id])
+
+  folderId  String?
+  folder    Folder? @relation(fields: [folderId], references: [id])
 }
