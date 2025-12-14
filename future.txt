@@ -1,0 +1,3 @@
+update recents from dashboard
+drag and drop
+delee folder

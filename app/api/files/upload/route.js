@@ -97,6 +97,10 @@ export async function POST(req) {
     try {
       cloudinaryResult = await uploadToCloudinary(buffer, userId);
       cloudinaryPublicId = cloudinaryResult.public_id;
+
+      // STEP 1: Log Cloudinary public_id for verification
+      console.log("Cloudinary public_id:", cloudinaryResult.public_id);
+      console.log("Cloudinary resource_type:", cloudinaryResult.resource_type);
     } catch (cloudinaryError) {
       console.error("Cloudinary upload error:", cloudinaryError);
       return NextResponse.json(
@@ -112,6 +116,8 @@ export async function POST(req) {
         data: {
           name: file.name,
           url: cloudinaryResult.secure_url,
+          cloudId: cloudinaryResult.public_id,
+          resourceType: cloudinaryResult.resource_type, // Store resource type for deletion
           type: file.type,
           size: cloudinaryResult.bytes || file.size, // Use Cloudinary bytes if available
           ownerId: userId,

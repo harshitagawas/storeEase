@@ -40,16 +40,19 @@ model Folder {
 }
 
 model File {
-  id        String   @id @default(uuid())
-  name      String
-  url       String
-  type      String
-  size      Int
-  createdAt DateTime @default(now())
+  id           String   @id @default(uuid())
+  name         String
+  url          String
+  type         String
+  size         Int
+  createdAt    DateTime @default(now())
 
-  ownerId   String
-  owner     User     @relation(fields: [ownerId], references: [id])
+  cloudId      String?
+  resourceType String?  // image | video | raw
 
-  folderId  String?
-  folder    Folder? @relation(fields: [folderId], references: [id])
+  ownerId      String
+  owner        User     @relation(fields: [ownerId], references: [id])
+
+  folderId     String?
+  folder       Folder?  @relation(fields: [folderId], references: [id])
 }

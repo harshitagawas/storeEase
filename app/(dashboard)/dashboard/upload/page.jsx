@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import FolderContextSelector from "@/components/upload/FolderContextSelector";
 import CreateFolderModal from "@/components/upload/CreateFolderModal";
 import UploadQueue from "@/components/upload/UploadQueue";
@@ -8,13 +9,24 @@ import UploadQueue from "@/components/upload/UploadQueue";
 /**
  * Upload Page
  * Main page for uploading files and organizing them into folders
+ * Reads folder context from URL query parameter: ?folder=<folderId>
  */
 export default function UploadPage() {
+  const searchParams = useSearchParams();
   const [selectedFolderId, setSelectedFolderId] = useState(null);
   const [breadcrumb, setBreadcrumb] = useState([]);
   const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
   const [uploads, setUploads] = useState([]);
+  const [isValidatingFolder, setIsValidatingFolder] = useState(false);
   const fileInputRef = useRef(null);
+
+  // Read folder from URL query parameter on mount
+  useEffect(() => {
+    const folderIdFromUrl = searchParams.get("folder");
+    if (folderIdFromUrl) {
+      validateAndSetFolder(folderIdFromUrl);
+    }
+  }, [searchParams]);
 
   // Fetch breadcrumb when folder changes
   useEffect(() => {
@@ -24,6 +36,30 @@ export default function UploadPage() {
       setBreadcrumb([]);
     }
   }, [selectedFolderId]);
+
+  // Validate folder exists and belongs to user, then set it
+  const validateAndSetFolder = async (folderId) => {
+    setIsValidatingFolder(true);
+    try {
+      const res = await fetch(`/api/folders/details?id=${folderId}`);
+      const data = await res.json();
+
+      if (data.success && data.folder) {
+        // Folder is valid, set it as selected
+        setSelectedFolderId(folderId);
+      } else {
+        // Invalid folder, fallback to root
+        console.warn("Invalid folder ID from URL, defaulting to root");
+        setSelectedFolderId(null);
+      }
+    } catch (error) {
+      console.error("Failed to validate folder:", error);
+      // On error, fallback to root
+      setSelectedFolderId(null);
+    } finally {
+      setIsValidatingFolder(false);
+    }
+  };
 
   const fetchBreadcrumb = async (folderId) => {
     try {
@@ -131,6 +167,23 @@ export default function UploadPage() {
   const handleUploadClick = () => {
     fileInputRef.current?.click();
   };
+
+  // Show loading state while validating folder from URL
+  if (isValidatingFolder) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <p
+          className="text-sm"
+          style={{
+            color: "var(--foreground-secondary)",
+            fontFamily: "var(--font-sora)",
+          }}
+        >
+          Loading...
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
