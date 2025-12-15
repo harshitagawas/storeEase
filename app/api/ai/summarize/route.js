@@ -1,14 +1,12 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { getCurrentUserId } from "@/lib/auth-utils";
 import { callHuggingFaceAPI } from "@/lib/huggingface";
-import {
-  extractTextFromDocument,
-  isDocumentTypeSupported,
-} from "@/lib/document-extractor";
+export const runtime = "nodejs";
 
-const SUMMARIZATION_MODEL = "facebook/bart-large-cnn";
-const MAX_TEXT_LENGTH = 1024; // BART model has token limits
+const SUMMARIZATION_MODEL = "sshleifer/distilbart-cnn-12-6";
+const MIN_SUMMARY_LENGTH = 40;
+const HF_TIMEOUT_MS = 45000;
+const MAX_CHARS = 3000;
 
 /**
  * POST /api/ai/summarize
@@ -30,107 +28,63 @@ export async function POST(req) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Step 2: Get fileId from request body
-    const { fileId } = await req.json();
+    // Step 2: Get text input (and optional fileType) from request body
+    const { text, fileType } = await req.json();
 
-    if (!fileId) {
-      return NextResponse.json(
-        { error: "File ID is required" },
-        { status: 400 }
-      );
-    }
-
-    // Step 3: Fetch file and verify ownership
-    const file = await prisma.file.findFirst({
-      where: {
-        id: fileId,
-        ownerId: userId,
-      },
-    });
-
-    if (!file) {
-      return NextResponse.json(
-        { error: "File not found or access denied" },
-        { status: 404 }
-      );
-    }
-
-    // Step 4: Check if summary already exists
-    const existingMetadata = file.aiMetadata;
-    if (
-      existingMetadata &&
-      typeof existingMetadata === "object" &&
-      existingMetadata.summary
-    ) {
-      return NextResponse.json({
-        success: true,
-        summary: existingMetadata.summary,
-        cached: true,
-      });
-    }
-
-    // Step 5: Check if file type is supported
-    if (!isDocumentTypeSupported(file.type)) {
+    if (!text || typeof text !== "string") {
       return NextResponse.json(
         {
-          error:
-            "File type not supported for summarization. Only PDF, TXT, and DOCX files are supported.",
+          success: false,
+          reason: "INVALID_INPUT",
+          message: "Only text-based files can be summarized.",
         },
-        { status: 400 }
+        { status: 200 }
       );
     }
 
-    // Step 6: Download file from Cloudinary
-    let fileBuffer;
-    try {
-      const fileResponse = await fetch(file.url);
-      if (!fileResponse.ok) {
-        throw new Error(`Failed to download file: ${fileResponse.statusText}`);
-      }
-      const arrayBuffer = await fileResponse.arrayBuffer();
-      fileBuffer = Buffer.from(arrayBuffer);
-    } catch (error) {
-      console.error("Failed to download file:", error);
+    if (text.startsWith("http")) {
       return NextResponse.json(
-        { error: "Failed to download file for processing" },
-        { status: 500 }
+        {
+          success: false,
+          reason: "INVALID_INPUT",
+          message: "Only text-based files can be summarized.",
+        },
+        { status: 200 }
       );
     }
 
-    // Step 7: Extract text from document
-    let extractedText;
-    try {
-      extractedText = await extractTextFromDocument(fileBuffer, file.type);
-
-      if (!extractedText || extractedText.trim().length === 0) {
-        return NextResponse.json(
-          { error: "No text content found in document" },
-          { status: 400 }
-        );
-      }
-    } catch (error) {
-      console.error("Text extraction error:", error);
+    // Step 3: Short-circuit PDFs per requirement (no HF call)
+    if (fileType === "application/pdf") {
       return NextResponse.json(
-        { error: `Failed to extract text: ${error.message}` },
-        { status: 500 }
+        {
+          success: false,
+          reason: "PDF_UNSUPPORTED",
+          message:
+            "PDF summarization is supported only for text-based documents. Scanned or complex PDFs are currently unsupported.",
+        },
+        { status: 200 }
       );
     }
 
-    // Step 8: Truncate text if too long (BART has token limits)
-    // We'll take the first part of the document for summarization
-    const textToSummarize =
-      extractedText.length > MAX_TEXT_LENGTH
-        ? extractedText.substring(0, MAX_TEXT_LENGTH)
-        : extractedText;
-
-    // Step 9: Call Hugging Face API for summarization
+    // Step 4: Call Hugging Face with text directly
     let summary;
     try {
-      const response = await callHuggingFaceAPI(SUMMARIZATION_MODEL, {
-        inputs: textToSummarize,
-      });
+      const inputText =
+        text.length > MAX_CHARS ? text.slice(0, MAX_CHARS) : text;
 
-      // Handle different response formats
+      const response = await callHuggingFaceAPI(
+        SUMMARIZATION_MODEL,
+        {
+          inputs: inputText,
+          parameters: {
+            max_new_tokens: 120,
+            min_length: 30,
+            do_sample: false,
+          },
+        },
+        HF_TIMEOUT_MS
+      );
+
       if (typeof response === "string") {
         summary = response;
       } else if (response.summary_text) {
@@ -139,50 +93,43 @@ export async function POST(req) {
         summary = response[0].summary_text;
       } else if (response[0]?.generated_text) {
         summary = response[0].generated_text;
-      } else {
-        // Try to extract any text from the response
-        summary = JSON.stringify(response);
       }
 
-      if (!summary || summary.trim().length === 0) {
-        throw new Error("Empty summary received from AI model");
+      if (!summary || summary.trim().length < MIN_SUMMARY_LENGTH) {
+        return NextResponse.json(
+          {
+            success: false,
+            reason: "NO_TEXT_FOUND",
+            message:
+              "This PDF appears to be scanned or contains no readable text.",
+          },
+          { status: 200 }
+        );
       }
     } catch (error) {
       console.error("Hugging Face API error:", error);
       return NextResponse.json(
         {
-          error: `Failed to generate summary: ${error.message}`,
+          success: false,
+          reason: "TIMEOUT",
+          message: "Document is too large to summarize right now.",
         },
-        { status: 500 }
+        { status: 200 }
       );
     }
 
-    // Step 10: Store summary in database
-    const updatedMetadata = {
-      ...(existingMetadata && typeof existingMetadata === "object"
-        ? existingMetadata
-        : {}),
-      summary: summary.trim(),
-      summarizedAt: new Date().toISOString(),
-    };
-
-    await prisma.file.update({
-      where: { id: fileId },
-      data: {
-        aiMetadata: updatedMetadata,
-      },
-    });
-
-    // Step 11: Return summary
+    // Step 4: Return summary
     return NextResponse.json({
       success: true,
       summary: summary.trim(),
-      cached: false,
     });
   } catch (error) {
     console.error("Summarization error:", error);
     return NextResponse.json(
-      { error: error.message || "Internal server error" },
+      {
+        success: false,
+        error: error.message || "Internal server error",
+      },
       { status: 500 }
     );
   }

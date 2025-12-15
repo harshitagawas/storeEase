@@ -10,6 +10,7 @@ import {
   Presentation,
 } from "lucide-react";
 import Drawer from "@/components/common/Drawer";
+import mammoth from "mammoth";
 
 /**
  * FilePreviewDrawer Component
@@ -25,6 +26,8 @@ export default function FilePreviewDrawer({ isOpen, onClose, file }) {
   const [summary, setSummary] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const isPDF = file?.type === "application/pdf";
 
   // Check if file type supports summarization
   const isDocumentType = (mimeType) => {
@@ -60,8 +63,8 @@ export default function FilePreviewDrawer({ isOpen, onClose, file }) {
       return;
     }
 
-    // Only fetch for document types
-    if (!isDocumentType(file.type)) {
+    // Only fetch for document types (skip PDFs per requirement)
+    if (!isDocumentType(file.type) || isPDF) {
       return;
     }
 
@@ -77,18 +80,55 @@ export default function FilePreviewDrawer({ isOpen, onClose, file }) {
       setError(null);
 
       try {
+        let extractedText = "";
+
+        if (file.type === "text/plain") {
+          const resText = await fetch(file.url);
+          extractedText = await resText.text();
+        } else if (
+          file.type ===
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        ) {
+          const resDocx = await fetch(file.url);
+          const arrayBuffer = await resDocx.arrayBuffer();
+          const { value } = await mammoth.extractRawText({ arrayBuffer });
+          extractedText = value || "";
+        } else {
+          setSummary(null);
+          setError("This file type cannot be summarized.");
+          setIsLoading(false);
+          return;
+        }
+
+        const trimmed = extractedText.trim();
+        if (!trimmed) {
+          setSummary(null);
+          setError("This file type cannot be summarized.");
+          setIsLoading(false);
+          return;
+        }
+
         const res = await fetch("/api/ai/summarize", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ fileId: file.id }),
+          body: JSON.stringify({
+            text: trimmed,
+            fileType: file.type,
+          }),
         });
 
         const data = await res.json();
 
-        if (!res.ok) {
-          throw new Error(data.error || "Failed to generate summary");
+        if (!res.ok || !data.success) {
+          const message =
+            data?.message ||
+            data?.error ||
+            "PDF summarization is supported only for text-based documents.";
+          setSummary(null);
+          setError(message);
+          return;
         }
 
         setSummary(data.summary);
@@ -101,7 +141,7 @@ export default function FilePreviewDrawer({ isOpen, onClose, file }) {
     };
 
     fetchSummary();
-  }, [isOpen, file]);
+  }, [isOpen, file, isPDF]);
 
   // Don't render content if no file, but keep drawer mounted for animations
   if (!file) {
@@ -212,7 +252,18 @@ export default function FilePreviewDrawer({ isOpen, onClose, file }) {
               🧠 AI Summary
             </h3>
 
-            {isLoading && (
+            {isPDF ? (
+              <p
+                className="text-sm"
+                style={{
+                  color: "var(--foreground-secondary)",
+                  fontFamily: "var(--font-sora)",
+                }}
+              >
+                PDF summarization is supported only for text-based documents.
+                Scanned or complex PDFs are currently unsupported.
+              </p>
+            ) : isLoading ? (
               <div className="space-y-3">
                 <div
                   className="h-4 rounded animate-pulse"
@@ -227,9 +278,7 @@ export default function FilePreviewDrawer({ isOpen, onClose, file }) {
                   style={{ backgroundColor: "var(--background-secondary)" }}
                 />
               </div>
-            )}
-
-            {error && (
+            ) : error ? (
               <p
                 className="text-sm"
                 style={{
@@ -239,9 +288,7 @@ export default function FilePreviewDrawer({ isOpen, onClose, file }) {
               >
                 {error}
               </p>
-            )}
-
-            {summary && !isLoading && (
+            ) : summary ? (
               <p
                 className="text-sm leading-relaxed whitespace-pre-wrap"
                 style={{
@@ -251,9 +298,7 @@ export default function FilePreviewDrawer({ isOpen, onClose, file }) {
               >
                 {summary}
               </p>
-            )}
-
-            {!summary && !isLoading && !error && (
+            ) : (
               <p
                 className="text-sm"
                 style={{

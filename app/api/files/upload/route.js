@@ -95,7 +95,7 @@ export async function POST(req) {
     // Step 8: Upload to Cloudinary
     let cloudinaryResult;
     try {
-      cloudinaryResult = await uploadToCloudinary(buffer, userId);
+      cloudinaryResult = await uploadToCloudinary(buffer, userId, file.type);
       cloudinaryPublicId = cloudinaryResult.public_id;
 
       // STEP 1: Log Cloudinary public_id for verification
