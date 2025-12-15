@@ -3,6 +3,8 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
+import Features from "@/components/Features";
+import Footer from "@/components/Footer";
 
 export default function LandingPage() {
   // const router = useRouter();
@@ -24,6 +26,8 @@ export default function LandingPage() {
     >
       <Navbar />
       <Hero />
+      <Features />
+      <Footer />
     </div>
   );
 }

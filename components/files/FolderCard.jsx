@@ -225,5 +225,3 @@ export default function FolderCard({ folder, viewMode = "grid", onDelete }) {
     </div>
   );
 }
-
-
