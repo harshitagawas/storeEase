@@ -1,7 +1,5 @@
 "use client";
 
-import { useTheme } from "next-themes";
-
 const IconBrain = () => (
   <svg
     viewBox="0 0 64 64"
@@ -129,10 +127,6 @@ const badgeClass =
   "inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold tracking-wide bg-[rgba(124,160,254,0.16)] text-[var(--color-foreground)]";
 
 export default function Features() {
-  const { theme, resolvedTheme } = useTheme();
-  const isDark =
-    theme === "dark" || resolvedTheme === "dark" || resolvedTheme === "system";
-
   return (
     <section className="relative isolate overflow-hidden py-16 md:py-24">
       <div className="pointer-events-none absolute inset-0 opacity-80">
@@ -143,14 +137,7 @@ export default function Features() {
               "radial-gradient(circle at 30% 20%, rgba(124,160,254,0.28), transparent 35%), radial-gradient(circle at 80% 10%, rgba(153,121,223,0.24), transparent 32%), radial-gradient(circle at 70% 70%, rgba(229,224,246,0.35), transparent 45%)",
           }}
         />
-        <div
-          className="absolute inset-0"
-          style={{
-            background: isDark
-              ? "linear-gradient(135deg,rgba(26,26,26,0.55),rgba(37,37,37,0.75))"
-              : "transparent",
-          }}
-        />
+        <div className="absolute inset-0 bg-transparent dark:bg-[linear-gradient(135deg,rgba(26,26,26,0.55),rgba(37,37,37,0.75))]" />
       </div>
 
       <div className="relative mx-auto flex max-w-6xl flex-col gap-12 px-6">
